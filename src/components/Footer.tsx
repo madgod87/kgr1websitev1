@@ -1,10 +1,33 @@
 'use client'
 
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear()
+  const [isClient, setIsClient] = useState(false)
+
+  // Smooth scroll function
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId)
+    if (element) {
+      element.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      })
+    }
+  }
+
+  // Effect to set client-side state
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  // Check if we're on the home page
+  const isHomePage = () => {
+    return isClient && window.location.pathname === '/'
+  }
 
   return (
     <footer className="bg-gradient-to-r from-blue-900 via-blue-800 to-purple-800 text-white">
@@ -15,10 +38,14 @@ const Footer: React.FC = () => {
           {/* Office Information */}
           <div className="col-span-1 lg:col-span-2">
             <div className="flex items-center space-x-4 mb-6">
-              <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">🏛️</span>
-                </div>
+              <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center p-1">
+                <Image
+                  src="/logo/logo.png"
+                  alt="Krishnagar-I Development Block Logo"
+                  width={40}
+                  height={40}
+                  className="object-contain"
+                />
               </div>
               <div>
                 <h3 className="text-2xl font-bold">Krishnagar-I Development Block</h3>
@@ -60,28 +87,38 @@ const Footer: React.FC = () => {
             <h4 className="text-xl font-bold mb-6">Quick Links</h4>
             <ul className="space-y-3">
               {[
-                { name: 'Home', href: '/' },
-                { name: 'Block Profile', href: '/block-profile' },
-                { name: 'Services', href: '/services' },
-                { name: 'Image Gallery', href: '/gallery' },
-                { name: 'Notifications', href: '/notifications' },
-                { name: 'Contact Us', href: '/contact' },
-                { name: 'Admin', href: '/login' },
+                { name: 'Home', href: '/', action: null },
+                { name: 'Block Profile', href: '/block-profile', action: null },
+                { name: 'Services', href: isHomePage() ? '#' : '/services', action: isHomePage() ? () => scrollToSection('services') : null },
+                { name: 'Image Gallery', href: '/gallery', action: null },
+                { name: 'Notifications', href: '/notifications', action: null },
+                { name: 'Contact Us', href: isHomePage() ? '#' : '/contact', action: isHomePage() ? () => scrollToSection('contact') : null },
+                { name: 'Admin', href: '/login', action: null },
               ].map((link) => (
                 <li key={link.name}>
-                  <Link 
-                    href={link.href} 
-                    className="text-blue-200 hover:text-white transition-colors duration-200 flex items-center space-x-2"
-                  >
-                    <span className="w-2 h-2 bg-purple-400 rounded-full"></span>
-                    <span>{link.name}</span>
-                  </Link>
+                  {link.action ? (
+                    <button
+                      onClick={link.action}
+                      className="text-blue-200 hover:text-white transition-colors duration-200 flex items-center space-x-2 w-full text-left"
+                    >
+                      <span className="w-2 h-2 bg-purple-400 rounded-full"></span>
+                      <span>{link.name}</span>
+                    </button>
+                  ) : (
+                    <Link 
+                      href={link.href} 
+                      className="text-blue-200 hover:text-white transition-colors duration-200 flex items-center space-x-2"
+                    >
+                      <span className="w-2 h-2 bg-purple-400 rounded-full"></span>
+                      <span>{link.name}</span>
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* Important Links */}
+          {/* Government Portals */}
           <div>
             <h4 className="text-xl font-bold mb-6">Government Portals</h4>
             <ul className="space-y-3">
@@ -90,20 +127,25 @@ const Footer: React.FC = () => {
                 { name: 'India.gov.in', href: 'https://india.gov.in' },
                 { name: 'Digital India', href: 'https://digitalindia.gov.in' },
                 { name: 'MyGov', href: 'https://mygov.in' },
-                { name: 'Aadhaar', href: 'https://uidai.gov.in' },
+                { name: 'Aadhaar (UIDAI)', href: 'https://uidai.gov.in' },
                 { name: 'PM Kisan', href: 'https://pmkisan.gov.in' },
                 { name: 'MGNREGA', href: 'https://nrega.nic.in' },
-                { name: 'Lakshmir Bhandar', href: 'https://socialsecurity.wb.gov.in' },
+                { name: 'Lakshmir Bhandar', href: 'https://socialsecurity.wb.gov.in/lakshmirBhandar' },
+                { name: 'Jan Aushadhi', href: 'https://janaushadhi.gov.in' },
+                { name: 'Ayushman Bharat', href: 'https://pmjay.gov.in' },
+                { name: 'Sukanya Samriddhi', href: 'https://www.india.gov.in/sukanya-samriddhi-yojana' },
+                { name: 'e-District WB', href: 'https://edistrict.wb.gov.in' },
               ].map((link) => (
                 <li key={link.name}>
                   <a 
                     href={link.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-200 hover:text-white transition-colors duration-200 flex items-center space-x-2"
+                    className="text-blue-200 hover:text-white transition-colors duration-200 flex items-center space-x-2 group"
                   >
-                    <span className="w-2 h-2 bg-indigo-400 rounded-full"></span>
+                    <span className="w-2 h-2 bg-indigo-400 rounded-full group-hover:bg-white transition-colors"></span>
                     <span>{link.name}</span>
+                    <span className="opacity-0 group-hover:opacity-100 transition-opacity text-xs">↗</span>
                   </a>
                 </li>
               ))}

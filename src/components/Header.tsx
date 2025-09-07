@@ -1,18 +1,41 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isClient, setIsClient] = useState(false)
+
+  // Smooth scroll function
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId)
+    if (element) {
+      element.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      })
+    }
+    setIsMenuOpen(false) // Close mobile menu after clicking
+  }
+
+  // Effect to set client-side state
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  // Check if we're on the home page
+  const isHomePage = () => {
+    return isClient && window.location.pathname === '/'
+  }
 
   const navItems = [
     { name: 'Home', href: '/' },
     { name: 'Block Profile', href: '/block-profile' },
     { name: 'Image Gallery', href: '/gallery' },
-    { name: 'Services', href: '/services' },
-    { name: 'Contact', href: '/contact' },
+    { name: 'Services', href: isHomePage() ? '#' : '/services', action: isHomePage() ? () => scrollToSection('services') : undefined },
+    { name: 'Contact', href: isHomePage() ? '#' : '/contact', action: isHomePage() ? () => scrollToSection('contact') : undefined },
     { name: 'Admin', href: '/login' },
   ]
 
@@ -36,8 +59,14 @@ const Header: React.FC = () => {
         <div className="flex items-center justify-between">
           {/* Logo section */}
           <div className="flex items-center space-x-4">
-            <div className="w-16 h-16 rounded-full bg-white shadow-md flex items-center justify-center">
-              <span className="text-2xl">🏛️</span>
+            <div className="w-16 h-16 rounded-full bg-white shadow-md flex items-center justify-center p-2">
+              <Image
+                src="/logo/logo.png"
+                alt="Krishnagar-I Development Block Logo"
+                width={48}
+                height={48}
+                className="object-contain"
+              />
             </div>
             <div className="text-white">
               <h1 className="text-2xl md:text-3xl font-bold">
@@ -52,13 +81,23 @@ const Header: React.FC = () => {
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center space-x-8">
             {navItems.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className="text-white hover:text-purple-200 font-medium transition-colors duration-200 px-3 py-2 rounded-md hover:bg-white/10"
-              >
-                {item.name}
-              </Link>
+              item.action ? (
+                <button
+                  key={item.name}
+                  onClick={item.action}
+                  className="text-white hover:text-purple-200 font-medium transition-colors duration-200 px-3 py-2 rounded-md hover:bg-white/10"
+                >
+                  {item.name}
+                </button>
+              ) : (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className="text-white hover:text-purple-200 font-medium transition-colors duration-200 px-3 py-2 rounded-md hover:bg-white/10"
+                >
+                  {item.name}
+                </Link>
+              )
             ))}
             
             {/* Notification Box */}
@@ -110,14 +149,24 @@ const Header: React.FC = () => {
           <nav className="lg:hidden mt-4 py-4 border-t border-white/20">
             <div className="flex flex-col space-y-2">
               {navItems.map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className="text-white hover:text-purple-200 font-medium transition-colors duration-200 px-3 py-2 rounded-md hover:bg-white/10"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {item.name}
-                </Link>
+                item.action ? (
+                  <button
+                    key={item.name}
+                    onClick={item.action}
+                    className="text-white hover:text-purple-200 font-medium transition-colors duration-200 px-3 py-2 rounded-md hover:bg-white/10 text-left"
+                  >
+                    {item.name}
+                  </button>
+                ) : (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className="text-white hover:text-purple-200 font-medium transition-colors duration-200 px-3 py-2 rounded-md hover:bg-white/10"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    {item.name}
+                  </Link>
+                )
               ))}
               
               {/* Mobile Notification Link */}

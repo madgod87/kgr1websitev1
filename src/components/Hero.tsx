@@ -1,49 +1,95 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { supabase } from '@/lib/supabase'
+
+interface SlideshowImage {
+  id: string
+  filename: string
+  url: string
+  title: string
+  description?: string
+  display_order: number
+  uploaded_by: string
+  uploaded_at: string
+  file_size: number
+  is_active: boolean
+}
 
 const Hero: React.FC = () => {
   const [currentSlide, setCurrentSlide] = useState(0)
+  const [slides, setSlides] = useState<SlideshowImage[]>([])
+  const [loading, setLoading] = useState(true)
 
-  // Slideshow content - using placeholder images for now
-  const slides = [
+  // Default fallback slides if no slideshow images are uploaded
+  const defaultSlides = [
     {
-      id: 1,
-      image: '/slideshow/slide1.jpg',
+      id: 'default-1',
+      filename: 'default1.jpg',
+      url: '/api/placeholder/800/600',
       title: 'Welcome to Krishnagar-I Development Block',
       description: 'Serving the community of Nadia District with dedication and transparency',
+      display_order: 1,
+      uploaded_by: 'system',
+      uploaded_at: new Date().toISOString(),
+      file_size: 0,
+      is_active: true
     },
     {
-      id: 2,
-      image: '/slideshow/slide2.jpg',
+      id: 'default-2',
+      filename: 'default2.jpg',
+      url: '/api/placeholder/800/600',
       title: 'Government Services',
       description: 'Access various government schemes and services online',
+      display_order: 2,
+      uploaded_by: 'system',
+      uploaded_at: new Date().toISOString(),
+      file_size: 0,
+      is_active: true
     },
     {
-      id: 3,
-      image: '/slideshow/slide3.jpg',
+      id: 'default-3',
+      filename: 'default3.jpg',
+      url: '/api/placeholder/800/600',
       title: 'Digital India Initiative',
       description: 'Empowering citizens through digital transformation',
-    },
-    {
-      id: 4,
-      image: '/slideshow/slide4.jpg',
-      title: 'Community Support',
-      description: 'We are here to help you with all government services and procedures',
-    },
-    {
-      id: 5,
-      image: '/slideshow/slide5.jpg',
-      title: 'Transparency & Efficiency',
-      description: 'Committed to providing quality government services to all citizens',
-    },
-    {
-      id: 6,
-      image: '/slideshow/slide6.jpg',
-      title: 'Development Initiatives',
-      description: 'Driving progress and development in Nadia District',
-    },
+      display_order: 3,
+      uploaded_by: 'system',
+      uploaded_at: new Date().toISOString(),
+      file_size: 0,
+      is_active: true
+    }
   ]
+
+  useEffect(() => {
+    loadSlideshowImages()
+  }, [])
+
+  const loadSlideshowImages = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('slideshow_images')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true })
+
+      if (error) {
+        console.error('Error loading slideshow images:', error)
+        // Use default slides if there's an error
+        setSlides(defaultSlides)
+      } else if (data && data.length > 0) {
+        setSlides(data)
+      } else {
+        // Use default slides if no slideshow images are uploaded
+        setSlides(defaultSlides)
+      }
+    } catch (error) {
+      console.error('Error loading slideshow images:', error)
+      setSlides(defaultSlides)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   // Auto-slide functionality
   useEffect(() => {
@@ -66,6 +112,19 @@ const Hero: React.FC = () => {
     setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length)
   }
 
+  if (loading) {
+    return (
+      <section className="relative h-screen md:h-[70vh] bg-gray-900 overflow-hidden">
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-center text-white">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+            <p>Loading slideshow...</p>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
   return (
     <section className="relative h-screen md:h-[70vh] bg-gray-900 overflow-hidden">
       {/* Slideshow */}
@@ -80,28 +139,9 @@ const Hero: React.FC = () => {
             <div
               className="w-full h-full bg-cover bg-center bg-no-repeat"
               style={{
-                backgroundImage: `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url(${slide.image})`,
+                backgroundImage: `url(${slide.url})`,
               }}
             />
-            {/* Content overlay */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center text-white px-4 max-w-4xl">
-                <h1 className="text-4xl md:text-6xl font-bold mb-6 animate-fade-in">
-                  {slide.title}
-                </h1>
-                <p className="text-xl md:text-2xl mb-8 text-gray-200">
-                  {slide.description}
-                </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <button className="bg-blue-600 hover:bg-blue-700 text-white text-lg px-8 py-3 rounded-lg transform hover:scale-105 transition-transform">
-                    Explore Services
-                  </button>
-                  <button className="border-2 border-white text-white hover:bg-white hover:text-blue-600 text-lg px-8 py-3 rounded-lg transform hover:scale-105 transition-all">
-                    Contact Us
-                  </button>
-                </div>
-              </div>
-            </div>
           </div>
         ))}
       </div>
@@ -141,6 +181,32 @@ const Hero: React.FC = () => {
             aria-label={`Go to slide ${index + 1}`}
           />
         ))}
+      </div>
+
+      {/* Floating Action Buttons */}
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-4 z-20">
+        <button
+          onClick={() => {
+            const element = document.getElementById('services')
+            if (element) {
+              element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            }
+          }}
+          className="bg-blue-600 hover:bg-blue-700 text-white text-lg px-6 py-3 rounded-lg transform hover:scale-105 transition-all shadow-lg backdrop-blur-sm bg-opacity-90"
+        >
+          Explore Services
+        </button>
+        <button
+          onClick={() => {
+            const element = document.getElementById('contact')
+            if (element) {
+              element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            }
+          }}
+          className="border-2 border-white text-white hover:bg-white hover:text-blue-600 text-lg px-6 py-3 rounded-lg transform hover:scale-105 transition-all shadow-lg backdrop-blur-sm bg-black bg-opacity-20 hover:bg-opacity-100"
+        >
+          Contact Us
+        </button>
       </div>
 
       {/* Scroll indicator */}

@@ -18,6 +18,22 @@ interface NotificationForm {
   is_active: boolean
 }
 
+interface Notification {
+  id: string
+  title: string
+  content: string
+  created_by: string
+  created_at: string
+  updated_at: string
+  is_active: boolean
+  file_url?: string | null
+  file_name?: string | null
+  file_type?: string | null
+  file_size?: number | null
+  dynamic_url?: string | null
+  url_title?: string | null
+}
+
 export default function EditNotification() {
   const router = useRouter()
   const params = useParams()
@@ -65,22 +81,26 @@ export default function EditNotification() {
 
   const loadNotification = async () => {
     try {
-      const { data, error } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('id', notificationId)
-        .single()
-
-      if (error) {
-        console.error('Error loading notification:', error)
+      // Use API route to get notifications
+      const response = await fetch('/api/notifications')
+      const result = await response.json()
+      
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to load notifications')
+      }
+      
+      // Find the specific notification
+      const notification = result.notifications.find((n: Notification) => n.id === notificationId)
+      
+      if (!notification) {
         setError('Notification not found')
         return
       }
 
       setFormData({
-        title: data.title,
-        content: data.content,
-        is_active: data.is_active
+        title: notification.title,
+        content: notification.content,
+        is_active: notification.is_active
       })
     } catch (error) {
       console.error('Error loading notification:', error)
@@ -102,19 +122,25 @@ export default function EditNotification() {
     setError('')
 
     try {
-      const { error: updateError } = await supabase
-        .from('notifications')
-        .update({
+      // Use API route instead of direct supabase call
+      const response = await fetch('/api/notifications', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          id: notificationId,
           title: formData.title.trim(),
           content: formData.content.trim(),
-          is_active: formData.is_active,
-          updated_at: new Date().toISOString()
+          is_active: formData.is_active
         })
-        .eq('id', notificationId)
+      })
 
-      if (updateError) {
-        console.error('Error updating notification:', updateError)
-        setError('Failed to update notification. Please try again.')
+      const result = await response.json()
+
+      if (!response.ok || !result.success) {
+        console.error('Error updating notification:', result.error)
+        setError(result.error || 'Failed to update notification. Please try again.')
         return
       }
 

@@ -96,17 +96,24 @@ export default function UserManagement() {
     setSuccess('')
     
     try {
-      const { data, error } = await supabase
-        .from('admins')
-        .update({ is_active: !currentStatus })
-        .eq('id', userId)
-        .select()
+      const response = await fetch(`/api/users/${userId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          userid: users.find(u => u.id === userId)?.userid || '',
+          role: users.find(u => u.id === userId)?.role || 'sub_admin',
+          notification_access: users.find(u => u.id === userId)?.notification_access || false,
+          photo_access: users.find(u => u.id === userId)?.photo_access || false,
+          is_active: !currentStatus
+        })
+      })
 
-      console.log('Update result:', { data, error })
+      const result = await response.json()
 
-      if (error) {
-        console.error('Error updating user status:', error)
-        setError(`Failed to update user status: ${error.message}`)
+      if (!response.ok || !result.success) {
+        setError(result.error || 'Failed to update user status')
         return
       }
 
@@ -154,15 +161,34 @@ export default function UserManagement() {
   }
 
   const updateUserPermissions = async (userId: string, permissions: { notification_access: boolean, photo_access: boolean }) => {
+    setError('')
+    setSuccess('')
+    
     try {
-      const { error } = await supabase
-        .from('admins')
-        .update(permissions)
-        .eq('id', userId)
+      const user = users.find(u => u.id === userId)
+      if (!user) {
+        setError('User not found')
+        return
+      }
 
-      if (error) {
-        console.error('Error updating permissions:', error)
-        setError('Failed to update permissions')
+      const response = await fetch(`/api/users/${userId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          userid: user.userid,
+          role: user.role,
+          notification_access: permissions.notification_access,
+          photo_access: permissions.photo_access,
+          is_active: user.is_active
+        })
+      })
+
+      const result = await response.json()
+
+      if (!response.ok || !result.success) {
+        setError(result.error || 'Failed to update permissions')
         return
       }
 

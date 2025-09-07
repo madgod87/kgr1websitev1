@@ -16,6 +16,8 @@ interface NotificationForm {
   title: string
   content: string
   is_active: boolean
+  dynamicUrl: string
+  urlTitle: string
 }
 
 export default function CreateNotification() {
@@ -24,8 +26,11 @@ export default function CreateNotification() {
   const [formData, setFormData] = useState<NotificationForm>({
     title: '',
     content: '',
-    is_active: true
+    is_active: true,
+    dynamicUrl: '',
+    urlTitle: ''
   })
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -58,6 +63,30 @@ export default function CreateNotification() {
     }
   }, [router])
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null
+    if (file) {
+      const allowedTypes = ['text/html', 'application/pdf', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']
+      const allowedExtensions = ['html', 'pdf', 'xls', 'xlsx']
+      const fileExt = file.name.split('.').pop()?.toLowerCase()
+      
+      if (!allowedTypes.includes(file.type) || !fileExt || !allowedExtensions.includes(fileExt)) {
+        setError('Only HTML, PDF, XLS, and XLSX files are allowed')
+        setSelectedFile(null)
+        return
+      }
+      
+      if (file.size > 10 * 1024 * 1024) {
+        setError('File size must be less than 10MB')
+        setSelectedFile(null)
+        return
+      }
+      
+      setError('')
+    }
+    setSelectedFile(file)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -70,20 +99,28 @@ export default function CreateNotification() {
     setError('')
 
     try {
-      const { error: insertError } = await supabase
-        .from('notifications')
-        .insert([
-          {
-            title: formData.title.trim(),
-            content: formData.content.trim(),
-            is_active: formData.is_active,
-            created_by: adminData!.id
-          }
-        ])
+      // Create FormData for file upload
+      const submitData = new FormData()
+      submitData.append('title', formData.title.trim())
+      submitData.append('content', formData.content.trim())
+      submitData.append('is_active', formData.is_active.toString())
+      submitData.append('adminId', adminData!.id)
+      submitData.append('dynamicUrl', formData.dynamicUrl.trim())
+      submitData.append('urlTitle', formData.urlTitle.trim())
+      
+      if (selectedFile) {
+        submitData.append('file', selectedFile)
+      }
 
-      if (insertError) {
-        console.error('Error creating notification:', insertError)
-        setError('Failed to create notification. Please try again.')
+      const response = await fetch('/api/notifications', {
+        method: 'POST',
+        body: submitData
+      })
+
+      const result = await response.json()
+
+      if (!response.ok || !result.success) {
+        setError(result.error || 'Failed to create notification. Please try again.')
         return
       }
 
@@ -170,6 +207,69 @@ export default function CreateNotification() {
               </p>
             </div>
 
+            {/* File Upload Section */}
+            <div>
+              <label htmlFor="file" className="block text-sm font-medium text-gray-700 mb-2">
+                Attach File (Optional)
+              </label>
+              <input
+                type="file"
+                id="file"
+                accept=".html,.pdf,.xls,.xlsx"
+                onChange={handleFileChange}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                disabled={isLoading}
+              />
+              <p className="mt-1 text-sm text-gray-500">
+                Upload HTML, PDF, or Excel files (max 10MB). Files will be available for direct download.
+              </p>
+              {selectedFile && (
+                <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
+                  <p className="text-sm text-blue-700">
+                    Selected: {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Dynamic URL Section */}
+            <div className="border-t border-gray-200 pt-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">External Link (Optional)</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="urlTitle" className="block text-sm font-medium text-gray-700 mb-2">
+                    Link Text
+                  </label>
+                  <input
+                    type="text"
+                    id="urlTitle"
+                    value={formData.urlTitle}
+                    onChange={(e) => setFormData({ ...formData, urlTitle: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="e.g., 'View Full Document', 'Read More'"
+                    disabled={isLoading}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="dynamicUrl" className="block text-sm font-medium text-gray-700 mb-2">
+                    URL
+                  </label>
+                  <input
+                    type="url"
+                    id="dynamicUrl"
+                    value={formData.dynamicUrl}
+                    onChange={(e) => setFormData({ ...formData, dynamicUrl: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="https://example.com"
+                    disabled={isLoading}
+                  />
+                </div>
+              </div>
+              <p className="mt-2 text-sm text-gray-500">
+                Add an external link that users can click to view additional information.
+              </p>
+            </div>
+
             <div className="flex items-center">
               <input
                 type="checkbox"
@@ -231,7 +331,7 @@ export default function CreateNotification() {
                   <div className="flex-shrink-0">
                     <span className="text-blue-400 text-xl">📢</span>
                   </div>
-                  <div className="ml-3">
+                  <div className="ml-3 flex-1">
                     <h4 className="text-lg font-medium text-blue-900">
                       {formData.title || 'Notification Title'}
                     </h4>
@@ -240,6 +340,29 @@ export default function CreateNotification() {
                         {formData.content || 'Notification content will appear here...'}
                       </p>
                     </div>
+                    
+                    {/* Preview file attachment */}
+                    {selectedFile && (
+                      <div className="mt-3 flex items-center space-x-2">
+                        <span className="text-blue-600">📎</span>
+                        <span className="text-sm text-blue-700">
+                          {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+                        </span>
+                      </div>
+                    )}
+                    
+                    {/* Preview dynamic URL */}
+                    {formData.dynamicUrl && formData.urlTitle && (
+                      <div className="mt-3">
+                        <a 
+                          href="#" 
+                          className="inline-flex items-center text-blue-600 hover:text-blue-700 text-sm font-medium"
+                          onClick={(e) => e.preventDefault()}
+                        >
+                          {formData.urlTitle} <span className="ml-1">→</span>
+                        </a>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

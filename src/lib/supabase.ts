@@ -30,6 +30,12 @@ export interface Notification {
   created_at: string
   updated_at: string
   is_active: boolean
+  file_url?: string | null
+  file_name?: string | null
+  file_type?: string | null
+  file_size?: number | null
+  dynamic_url?: string | null
+  url_title?: string | null
 }
 
 export interface GalleryImage {

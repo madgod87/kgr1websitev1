@@ -53,7 +53,7 @@ const ContactForm: React.FC = () => {
   }
 
   return (
-    <section className="py-16 bg-gradient-to-br from-blue-50 to-purple-50">
+    <section id="contact" className="py-16 bg-gradient-to-br from-blue-50 to-purple-50">
       <div className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto">
           {/* Section Header */}

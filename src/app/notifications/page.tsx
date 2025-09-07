@@ -6,12 +6,19 @@ import Header from '../../components/Header'
 import Footer from '../../components/Footer'
 
 interface Notification {
-  id: number
+  id: string
   title: string
-  description: string
-  fileUrl: string
-  fileType: 'pdf' | 'html' | 'none'
-  createdAt: string
+  content: string
+  created_by: string
+  created_at: string
+  updated_at: string
+  is_active: boolean
+  file_url?: string | null
+  file_name?: string | null
+  file_type?: string | null
+  file_size?: number | null
+  dynamic_url?: string | null
+  url_title?: string | null
 }
 
 const NotificationsPage: React.FC = () => {
@@ -26,38 +33,16 @@ const NotificationsPage: React.FC = () => {
   const fetchNotifications = async () => {
     try {
       setLoading(true)
-      // Simulate API call - replace with actual API endpoint
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      const response = await fetch('/api/notifications')
+      const result = await response.json()
       
-      // Sample notifications data
-      const sampleNotifications: Notification[] = [
-        {
-          id: 1,
-          title: 'New Scheme: Pradhan Mantri Awas Yojana Application Process',
-          description: 'Applications are now open for the Pradhan Mantri Awas Yojana (Rural) scheme. Eligible beneficiaries can apply online or visit our office.',
-          fileUrl: '/documents/pmay-guidelines.pdf',
-          fileType: 'pdf',
-          createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
-        },
-        {
-          id: 2,
-          title: 'Office Holiday Notice - Republic Day',
-          description: 'Our office will remain closed on 26th January 2025 (Republic Day). Emergency services will be available.',
-          fileUrl: '',
-          fileType: 'none',
-          createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
-        },
-        {
-          id: 3,
-          title: 'Lakshmir Bhandar Status Update Process',
-          description: 'New online process for checking Lakshmir Bhandar application status. Click here to view the detailed guide.',
-          fileUrl: '/documents/lakshmir-bhandar-guide.html',
-          fileType: 'html',
-          createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(), // 10 days ago
-        },
-      ]
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to fetch notifications')
+      }
       
-      setNotifications(sampleNotifications)
+      // Filter only active notifications
+      const activeNotifications = result.notifications.filter((n: Notification) => n.is_active)
+      setNotifications(activeNotifications)
     } catch (err: any) {
       setError('Failed to fetch notifications')
       console.error(err)
@@ -77,9 +62,23 @@ const NotificationsPage: React.FC = () => {
   }
 
   const openFile = (notification: Notification) => {
-    if (notification.fileUrl) {
-      window.open(notification.fileUrl, '_blank')
+    if (notification.file_url) {
+      window.open(notification.file_url, '_blank')
     }
+  }
+
+  const openUrl = (notification: Notification) => {
+    if (notification.dynamic_url) {
+      window.open(notification.dynamic_url, '_blank')
+    }
+  }
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes'
+    const k = 1024
+    const sizes = ['Bytes', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
   }
 
   if (loading) {
@@ -139,54 +138,110 @@ const NotificationsPage: React.FC = () => {
                         <h3 className="text-xl font-semibold text-blue-800 mb-2">
                           {notification.title}
                         </h3>
-                        <p className="text-blue-600 mb-3 leading-relaxed">
-                          {notification.description}
-                        </p>
+                        <div className="text-blue-600 mb-3 leading-relaxed whitespace-pre-wrap">
+                          {notification.content}
+                        </div>
+                        
+                        {/* File attachment */}
+                        {notification.file_url && notification.file_name && (
+                          <div className="mb-3">
+                            <button
+                              onClick={() => openFile(notification)}
+                              className={`inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                notification.file_type === 'pdf'
+                                  ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                                  : notification.file_type === 'html'
+                                  ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                                  : 'bg-green-100 text-green-700 hover:bg-green-200'
+                              }`}
+                            >
+                              {notification.file_type === 'pdf' && '📄'}
+                              {notification.file_type === 'html' && '🌐'}
+                              {(notification.file_type === 'xlsx' || notification.file_type === 'xls') && '📊'}
+                              <span className="ml-2">
+                                {notification.file_name}
+                                {notification.file_size && (
+                                  <span className="text-xs ml-1 opacity-75">
+                                    ({formatFileSize(notification.file_size)})
+                                  </span>
+                                )}
+                              </span>
+                            </button>
+                          </div>
+                        )}
+                        
+                        {/* Dynamic URL */}
+                        {notification.dynamic_url && notification.url_title && (
+                          <div className="mb-3">
+                            <button
+                              onClick={() => openUrl(notification)}
+                              className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium transition-colors"
+                            >
+                              {notification.url_title}
+                              <span className="ml-2">→</span>
+                            </button>
+                          </div>
+                        )}
                       </div>
                       
-                      {notification.fileType !== 'none' && (
-                        <div className="ml-4 flex-shrink-0">
+                      <div className="ml-4 flex-shrink-0 flex flex-col space-y-2">
+                        {notification.file_url && (
                           <button
                             onClick={() => openFile(notification)}
                             className={`inline-flex items-center px-4 py-2 rounded-lg font-medium transition-colors ${
-                              notification.fileType === 'pdf'
+                              notification.file_type === 'pdf'
                                 ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                                : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                                : notification.file_type === 'html'
+                                ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                                : 'bg-green-100 text-green-700 hover:bg-green-200'
                             }`}
                           >
-                            {notification.fileType === 'pdf' ? (
-                              <>
-                                📄 View PDF
-                              </>
-                            ) : (
-                              <>
-                                🌐 View HTML
-                              </>
-                            )}
+                            {notification.file_type === 'pdf' && '📄 View PDF'}
+                            {notification.file_type === 'html' && '🌐 View HTML'}
+                            {(notification.file_type === 'xlsx' || notification.file_type === 'xls') && '📊 View Excel'}
                           </button>
-                        </div>
-                      )}
+                        )}
+                        
+                        {notification.dynamic_url && (
+                          <button
+                            onClick={() => openUrl(notification)}
+                            className="inline-flex items-center px-4 py-2 rounded-lg font-medium bg-purple-100 text-purple-700 hover:bg-purple-200 transition-colors"
+                          >
+                            🔗 {notification.url_title || 'External Link'}
+                          </button>
+                        )}
+                      </div>
                     </div>
 
                     <div className="flex items-center justify-between pt-4 border-t border-gray-200">
                       <div className="flex items-center text-sm text-gray-500">
                         <span className="mr-2">📅</span>
-                        <span>{formatDate(notification.createdAt)}</span>
+                        <span>{formatDate(notification.created_at)}</span>
                       </div>
                       
-                      {notification.fileType !== 'none' && (
-                        <div className="flex items-center text-sm text-gray-500">
-                          <span className="mr-1">
-                            {notification.fileType === 'pdf' ? '📄' : '🌐'}
-                          </span>
-                          <span className="capitalize">{notification.fileType} attachment</span>
-                        </div>
-                      )}
+                      <div className="flex items-center space-x-4 text-sm text-gray-500">
+                        {notification.file_url && (
+                          <div className="flex items-center">
+                            <span className="mr-1">
+                              {notification.file_type === 'pdf' && '📄'}
+                              {notification.file_type === 'html' && '🌐'}
+                              {(notification.file_type === 'xlsx' || notification.file_type === 'xls') && '📊'}
+                            </span>
+                            <span className="capitalize">{notification.file_type} attachment</span>
+                          </div>
+                        )}
+                        {notification.dynamic_url && (
+                          <div className="flex items-center">
+                            <span className="mr-1">🔗</span>
+                            <span>External link</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
 
                   {/* Visual indicator for new notifications (less than 7 days old) */}
-                  {new Date().getTime() - new Date(notification.createdAt).getTime() < 7 * 24 * 60 * 60 * 1000 && (
+                  {new Date().getTime() - new Date(notification.created_at).getTime() < 7 * 24 * 60 * 60 * 1000 && (
                     <div className="bg-gradient-to-r from-purple-500 to-blue-500 text-white text-center py-2 text-sm font-medium">
                       ✨ New
                     </div>
