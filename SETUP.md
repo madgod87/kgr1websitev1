@@ -25,9 +25,17 @@
    npm run dev
    ```
 
-5. **Login**
+5. **Create Admin Account**
+   ```bash
+   # Set your admin credentials
+   export ADMIN_USERID="your_username"
+   export ADMIN_PASSWORD="your_password"
+   node create-admin.js
+   ```
+
+6. **Login**
    - Visit `http://localhost:3000/login`
-   - Use credentials: `madgod87` / `Beta@Alpha#1991`
+   - Use the credentials you created above
 
 ## Deployment Checklist
 

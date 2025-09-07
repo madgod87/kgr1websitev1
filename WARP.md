@@ -97,9 +97,13 @@ npm run lint
 
 ## Admin Access
 
-### Default Credentials
-- **User ID**: `madgod87`
-- **Password**: `Beta@Alpha#1991`
+### Creating Admin Credentials
+**SECURITY**: Default credentials removed for security reasons.
+
+To create admin account:
+1. Set `ADMIN_USERID` and `ADMIN_PASSWORD` environment variables
+2. Run `node create-admin.js` to create main admin
+3. Or manually edit `create-main-admin.sql` with your credentials
 
 ### Admin Management
 - Main admin can create sub-admins via `/admin/sub-admins`

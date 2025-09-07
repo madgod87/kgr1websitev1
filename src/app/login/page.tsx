@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useForm } from 'react-hook-form'
 
 interface LoginForm {
   userid: string
@@ -10,38 +9,57 @@ interface LoginForm {
 }
 
 export default function LoginPage() {
+  const [formData, setFormData] = useState<LoginForm>({
+    userid: '',
+    password: ''
+  })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
-  
-  const {
-    register,
-    handleSubmit,
-    formState: { errors }
-  } = useForm<LoginForm>()
 
-  const onSubmit = async (data: LoginForm) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
     setIsLoading(true)
     setError('')
 
     try {
-      const response = await fetch('/api/auth/login', {
+      console.log('Attempting login with:', formData.userid)
+      
+      // Call authentication API
+      const response = await fetch('/api/auth', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(data)
+        body: JSON.stringify(formData)
       })
 
       const result = await response.json()
 
-      if (response.ok && result.success) {
-        router.push('/admin')
-      } else {
-        setError(result.error || 'Login failed')
+      if (!response.ok || !result.success) {
+        console.log('Login failed:', result.error)
+        setError(result.error || 'Invalid credentials')
+        return
       }
+
+      console.log('Login successful:', result.admin)
+
+      // Store admin data in localStorage (simple session management)
+      const sessionData = {
+        id: result.admin.id,
+        userid: result.admin.userid,
+        role: result.admin.role,
+        loginTime: new Date().toISOString()
+      }
+      
+      localStorage.setItem('admin-session', JSON.stringify(sessionData))
+      console.log('Session stored, redirecting to admin')
+
+      // Redirect to admin dashboard
+      router.push('/admin')
     } catch (error) {
-      setError('Network error. Please try again.')
+      console.error('Login error:', error)
+      setError('Login failed. Please try again.')
     } finally {
       setIsLoading(false)
     }
@@ -55,7 +73,7 @@ export default function LoginPage() {
           <p className="text-gray-600">Krishnagar-I Development Block</p>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label htmlFor="userid" className="block text-sm font-medium text-gray-700 mb-2">
               User ID
@@ -63,20 +81,12 @@ export default function LoginPage() {
             <input
               id="userid"
               type="text"
-              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                errors.userid ? 'border-red-500' : 'border-gray-300'
-              }`}
-              {...register('userid', { 
-                required: 'User ID is required',
-                minLength: {
-                  value: 3,
-                  message: 'User ID must be at least 3 characters'
-                }
-              })}
+              value={formData.userid}
+              onChange={(e) => setFormData({ ...formData, userid: e.target.value })}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              required
+              disabled={isLoading}
             />
-            {errors.userid && (
-              <p className="mt-1 text-sm text-red-600">{errors.userid.message}</p>
-            )}
           </div>
 
           <div>
@@ -86,20 +96,12 @@ export default function LoginPage() {
             <input
               id="password"
               type="password"
-              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                errors.password ? 'border-red-500' : 'border-gray-300'
-              }`}
-              {...register('password', { 
-                required: 'Password is required',
-                minLength: {
-                  value: 6,
-                  message: 'Password must be at least 6 characters'
-                }
-              })}
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              required
+              disabled={isLoading}
             />
-            {errors.password && (
-              <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
-            )}
           </div>
 
           {error && (

@@ -5,14 +5,8 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-// For admin operations
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false
-  }
-})
+// Note: For client-side operations, we use the regular supabase client
+// Server-side admin operations would require a separate API route
 
 // Database Types
 export interface Admin {
@@ -24,6 +18,8 @@ export interface Admin {
   created_at: string
   updated_at: string
   is_active: boolean
+  notification_access: boolean
+  photo_access: boolean
 }
 
 export interface Notification {

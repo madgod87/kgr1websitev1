@@ -84,15 +84,32 @@ Visit `http://localhost:3000` to see the application.
 
 ## Admin Access
 
-### Main Admin Credentials
-- **User ID**: `madgod87`
-- **Password**: `Beta@Alpha#1991`
+### Setting Up Admin Credentials
 
+**SECURITY NOTE**: Default credentials have been removed for security reasons.
+
+To create your main admin account:
+
+1. **Set environment variables**:
+   ```bash
+   export ADMIN_USERID="your_chosen_username"
+   export ADMIN_PASSWORD="your_secure_password"
+   ```
+
+2. **Run the admin creation script**:
+   ```bash
+   node create-admin.js
+   ```
+
+3. **Or manually create via SQL**: Edit `create-main-admin.sql` with your credentials
+
+### Main Admin Capabilities
 The main admin can:
 - Create sub-admin accounts
-- Manage all notifications
+- Manage all notifications  
 - Upload and manage files/gallery images
 - View dashboard analytics
+- Manage user permissions
 
 ### Sub-Admin Access
 Sub-admins can be created by the main admin and have access to:

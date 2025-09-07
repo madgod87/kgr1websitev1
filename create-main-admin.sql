@@ -1,21 +1,20 @@
--- Insert main admin user
--- Password: Beta@Alpha#1991
--- This is a bcrypt hash of the password (you'll need to run this after setting up your database)
+-- SECURITY: Insert main admin user with YOUR credentials
+-- Replace USERNAME and PASSWORD_HASH with your actual values
 
 INSERT INTO public.admins (userid, password_hash, role, is_active) 
 VALUES (
-    'madgod87',
-    '$2b$12$6Y2/72Pk38DHfFJlFHghHuMU4aluMckQvYzU1eo5hVXGNSsknJWiu', -- bcrypt hash for Beta@Alpha#1991
+    'YOUR_ADMIN_USERNAME',  -- Replace with your chosen admin username
+    'YOUR_BCRYPT_PASSWORD_HASH',  -- Replace with bcrypt hash of your password
     'main_admin',
     true
 );
 
--- Note: You'll need to generate the actual bcrypt hash for "Beta@Alpha#1991"
--- You can do this by running the Node.js script below or using the admin creation API endpoint
+-- HOW TO GENERATE PASSWORD HASH:
+-- Run this Node.js script with your actual password:
 
 /*
 const bcrypt = require('bcryptjs');
-const password = 'Beta@Alpha#1991';
+const password = 'YOUR_SECURE_PASSWORD';  -- Replace with your actual password
 const saltRounds = 12;
 
 bcrypt.hash(password, saltRounds, function(err, hash) {
