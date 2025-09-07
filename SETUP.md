@@ -5,7 +5,7 @@
 1. **Clone and Setup**
    ```bash
    git clone <repository-url>
-   cd bankura2block-nextjs-supabase
+   cd kgr1websitev1
    npm install
    ```
 

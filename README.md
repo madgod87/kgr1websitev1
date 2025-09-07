@@ -1,4 +1,4 @@
-# Bankura2Block Next.js with Supabase
+# KGR1 Website V1 - Next.js with Supabase
 
 A modern Next.js application for the Krishnagar-I Development Block government website with Supabase backend integration.
 
