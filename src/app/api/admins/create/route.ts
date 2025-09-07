@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get current admin from token
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const token = cookieStore.get('admin-token')?.value
 
     if (!token) {
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const decoded = jwt.verify(token, process.env.NEXTAUTH_SECRET!) as any
+    const decoded = jwt.verify(token, process.env.NEXTAUTH_SECRET!) as { adminId: string; userid: string; role: string }
 
     if (decoded.role !== 'main_admin') {
       return NextResponse.json(

@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     )
 
     // Set HTTP-only cookie
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     cookieStore.set('admin-token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

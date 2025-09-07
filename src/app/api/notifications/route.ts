@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get current admin from token
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const token = cookieStore.get('admin-token')?.value
 
     if (!token) {
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const decoded = jwt.verify(token, process.env.NEXTAUTH_SECRET!) as any
+    const decoded = jwt.verify(token, process.env.NEXTAUTH_SECRET!) as { adminId: string; userid: string; role: string }
 
     const result = await createNotification(decoded.adminId, { title, content })
 
@@ -77,7 +77,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Get current admin from token
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const token = cookieStore.get('admin-token')?.value
 
     if (!token) {
@@ -89,7 +89,7 @@ export async function PUT(request: NextRequest) {
 
     jwt.verify(token, process.env.NEXTAUTH_SECRET!)
 
-    const updateData: any = {}
+    const updateData: { title?: string; content?: string; is_active?: boolean } = {}
     if (title !== undefined) updateData.title = title
     if (content !== undefined) updateData.content = content
     if (is_active !== undefined) updateData.is_active = is_active
@@ -130,7 +130,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Get current admin from token
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const token = cookieStore.get('admin-token')?.value
 
     if (!token) {

@@ -3,10 +3,10 @@ import { getAllAdmins, updateAdminStatus } from '@/lib/auth'
 import { cookies } from 'next/headers'
 import jwt from 'jsonwebtoken'
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Get current admin from token
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const token = cookieStore.get('admin-token')?.value
 
     if (!token) {
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const decoded = jwt.verify(token, process.env.NEXTAUTH_SECRET!) as any
+    const decoded = jwt.verify(token, process.env.NEXTAUTH_SECRET!) as { adminId: string; userid: string; role: string }
 
     if (decoded.role !== 'main_admin') {
       return NextResponse.json(
@@ -59,7 +59,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Get current admin from token
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const token = cookieStore.get('admin-token')?.value
 
     if (!token) {
@@ -69,7 +69,7 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
-    const decoded = jwt.verify(token, process.env.NEXTAUTH_SECRET!) as any
+    const decoded = jwt.verify(token, process.env.NEXTAUTH_SECRET!) as { adminId: string; userid: string; role: string }
 
     if (decoded.role !== 'main_admin') {
       return NextResponse.json(
